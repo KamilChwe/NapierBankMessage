@@ -10,6 +10,8 @@ namespace NapierBankMessage
     {
         public string DetectType(string header)
         {
+            Message message = new Message();
+
             string messageType = "None";
 
             // Check if the header (Message ID) contains these letters

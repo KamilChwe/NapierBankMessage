@@ -10,7 +10,7 @@
         <Label Content="Header" HorizontalAlignment="Left" Margin="10,49,0,0" VerticalAlignment="Top" FontSize="14" FontWeight="Bold"/>
         <TextBox x:Name="txtHeader" HorizontalAlignment="Left" Height="23" Margin="10,83,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="200" FontSize="14" TextChanged="txtHeader_TextChanged"/>
         <Label Content="Body" HorizontalAlignment="Left" Margin="10,111,0,0" VerticalAlignment="Top" FontSize="14" FontWeight="Bold"/>
-        <TextBox x:Name="txtBody" HorizontalAlignment="Left" Height="212" Margin="10,145,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="260"/>
+        <TextBox x:Name="txtBody" HorizontalAlignment="Left" Height="212" Margin="10,145,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="260" AcceptsReturn="True"/>
         <Label Content="Napier Bank Message Filter" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Bold" FontStyle="Italic" FontSize="18"/>
         <Button x:Name="btnSubmit" Content="Submit Data" HorizontalAlignment="Left" Margin="10,362,0,0" VerticalAlignment="Top" Width="75" Click="btnSubmit_Click"/>
         <Button x:Name="btnFile" Content="Import a File" HorizontalAlignment="Left" Margin="90,362,0,0" VerticalAlignment="Top" Width="75"/>

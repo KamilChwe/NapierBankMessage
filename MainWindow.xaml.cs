@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Text.RegularExpressions;
 
 namespace NapierBankMessage
 {
@@ -21,6 +22,7 @@ namespace NapierBankMessage
     public partial class MainWindow : Window
     {
         string messageType = "None";
+        string header, body;
 
         public MainWindow()
         {
@@ -33,7 +35,7 @@ namespace NapierBankMessage
             HeaderManager header = new HeaderManager();
 
             // Call the function to chec the type of the message
-            string messageType = header.DetectType(txtHeader.Text);
+            messageType = header.DetectType(txtHeader.Text);
 
             // Tell the user what type of message they just detected
             txtMessageType.Content = messageType + " Message ID Detected!";
@@ -41,19 +43,29 @@ namespace NapierBankMessage
 
         private void btnSubmit_Click(object sender, RoutedEventArgs e)
         {
+            header = txtHeader.Text;
+            body = txtBody.Text;
+
             // Check if all of the fields are correctly filled in
-            if(messageType == "Tweet" || messageType == "SMS" && txtBody.Text.Length > 140)
+            if(messageType == "Tweet" && body.Length > 140 || messageType == "SMS" && body.Length > 140)
             {
                 MessageBox.Show(messageType + " Messages can only be 140 characters long!");
             }
-            else if(messageType == "EMail" && txtBody.Text.Length > 1028)
+            else if(messageType == "EMail" && body.Length > 1028)
             {
                 MessageBox.Show(messageType = " Messages can only be 1028 characters long!");
             }
-            else if(txtHeader.Text.Length > 10 || txtHeader.Text.Length < 9)
+            else if(txtHeader.Text.Length > 10 || header.Length < 9)
             {
                 MessageBox.Show("The header must be 10 characters long!\n (Example: T123456789)");
             }
+            else
+            {
+                MessageManager processing = new MessageManager();
+
+                processing.StartProcessing(messageType, header, body);
+            }
+
         }
     }
 }
