@@ -73,11 +73,13 @@ namespace NapierBankMessage
 
                 case "EMail":
                     // Checks if the EMail is a SIR email or SEM
+                    // If the Body contains a sort code, assume its a SIR
                     if (body.Contains("Sort Code"))
                     {
                         SIR = true;
                         MessageBox.Show("This is a SIR email");
                     }
+                    // Otherwise, assume its SEM
                     else
                     {
                         SIR = false;
@@ -95,11 +97,13 @@ namespace NapierBankMessage
                 case "Tweet":
                     for (int i = 0; i < twitterMatches.Count; i++)
                     {
+                        // Assume the first Handle found is the Sender
                         if (i == 0)
                         {
                             MessageBox.Show("Found the Twitter Handle (Sender): " + twitterMatches[i]);
                             sender = twitterMatches[i].ToString();
                         }
+                        // The other Handles must be Mentions
                         else
                         {
                             MessageBox.Show("Found the Twitter Handle (Mention): " + twitterMatches[i]);
@@ -109,9 +113,10 @@ namespace NapierBankMessage
                     {
 
                     }
+                    AddMentions(twitterMatches);
+                    AddHashtags(hashtagMatches);
                     break;
             }
-            AddMentions(twitterMatches);
         }
 
         public void ConvertAbbreviations()
@@ -168,6 +173,7 @@ namespace NapierBankMessage
             // Otherwise if it doesn't exist then make a new one
             else
             {
+                // Create a new JSON file
                 File.WriteAllText("Mentions.json", "{\"mentionsList\": []}");
                 MentionsList mentList = JsonConvert.DeserializeObject<MentionsList>(File.ReadAllText("Mentions.json"));
 
@@ -184,9 +190,72 @@ namespace NapierBankMessage
             }
         }
 
-        public void AddHashtags()
+        public void AddHashtags(MatchCollection hashtags)
         {
+            // Check if the file for Hashtags exists
+            if (File.Exists("Hashtags.json"))
+            {
+                HashList hashtagList = JsonConvert.DeserializeObject<HashList>(File.ReadAllText("Hashtags.json"));
 
+                // Go through each Hashtag in the MatchCollection
+                foreach(var hashtag in hashtags)
+                {
+                    // Check if the hashtag already is present in the list
+                    bool hashtagPresent = true;
+                    
+                    // Go through each Hashtag in the list
+                    foreach(Hashtag currentHashtag in hashtagList.Hashtags.ToList())
+                    {
+                        if(currentHashtag.hashtag == hashtag.ToString())
+                        {
+                            // Increase the counter every time this hashtag is found in the messages
+                            currentHashtag.hashtagCount++;
+
+                            // Tell the program that hashtag is present in the list
+                            hashtagPresent = true;
+
+                            // Add this count to the JSON
+                            File.WriteAllText("Hashtags.json", JsonConvert.SerializeObject(hashtagList, Formatting.Indented) + Environment.NewLine);
+
+                            // Exit this loop
+                            goto FoundHash;
+                        }
+                        else
+                        {
+                            // This hashtag is not on the List
+                            hashtagPresent = false;
+                        }
+                    }
+                    if(hashtagPresent == false)
+                    {
+                        // Create an entry for this new Hashtag
+                        Hashtag newHashtag = new Hashtag(hashtag.ToString(), 1);
+                        hashtagList.Hashtags.Add(newHashtag);
+
+                        // Add this hashtag to the JSON
+                        File.WriteAllText("Hashtags.json", JsonConvert.SerializeObject(hashtagList, Formatting.Indented) + Environment.NewLine);
+                    }
+
+                    FoundHash:
+                        continue;
+                }
+            }
+            // Otherwise if the JSON doesn't exist, make a new one
+            else
+            {
+                File.WriteAllText("Hashtags.json", "{\"Hashtags\": []}");
+                HashList hashtagList = JsonConvert.DeserializeObject<HashList>(File.ReadAllText("Hashtags.json"));
+
+                foreach (var hashtag in hashtags)
+                {
+                    // Create an entry for the hashtag
+                    Hashtag newHashtag = new Hashtag(hashtag.ToString(), 1);
+                    hashtagList.Hashtags.Add(newHashtag);
+                }
+
+                // Add it to the new JSON file
+                File.WriteAllText("Hashtags.json", JsonConvert.SerializeObject(hashtagList, Formatting.Indented) + Environment.NewLine);
+            }
         }
 
         public void AddURLs()
