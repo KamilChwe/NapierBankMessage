@@ -42,7 +42,18 @@ namespace NapierBankMessage
         private void btnSubmit_Click(object sender, RoutedEventArgs e)
         {
             // Check if all of the fields are correctly filled in
-
+            if(messageType == "Tweet" || messageType == "SMS" && txtBody.Text.Length > 140)
+            {
+                MessageBox.Show(messageType + " Messages can only be 140 characters long!");
+            }
+            else if(messageType == "EMail" && txtBody.Text.Length > 1028)
+            {
+                MessageBox.Show(messageType = " Messages can only be 1028 characters long!");
+            }
+            else if(txtHeader.Text.Length > 10 || txtHeader.Text.Length < 9)
+            {
+                MessageBox.Show("The header must be 10 characters long!\n (Example: T123456789)");
+            }
         }
     }
 }
