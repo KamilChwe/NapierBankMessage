@@ -67,11 +67,18 @@ namespace NapierBankMessage
             switch (messageType)
             {
                 case "SMS":
-                    MessageBox.Show("Found a phone number: " + smsMatch.Value);
+                    // The Sender is the Phone Number in the body
                     sender = smsMatch.Value;
+
+                    // Call these functions to check the Body and save any necessary information
+                    ConvertAbbreviations();
+                    AddMessages();
                     break;
 
                 case "EMail":
+                    // Sender is the only email in the body
+                    sender = emailMatch.Value;
+
                     // Checks if the EMail is a SIR email or SEM
                     // If the Body contains a sort code, assume its a SIR
                     if (body.Contains("Sort Code"))
@@ -91,56 +98,53 @@ namespace NapierBankMessage
                         MessageBox.Show("Found an URL: " + match.Value);
                         //AddURLs(match.Value);
                     }
-                    sender = emailMatch.Value;
+
                     break;
 
                 case "Tweet":
-                    for (int i = 0; i < twitterMatches.Count; i++)
-                    {
-                        // Assume the first Handle found is the Sender
-                        if (i == 0)
-                        {
-                            MessageBox.Show("Found the Twitter Handle (Sender): " + twitterMatches[i]);
-                            sender = twitterMatches[i].ToString();
-                        }
-                        // The other Handles must be Mentions
-                        else
-                        {
-                            MessageBox.Show("Found the Twitter Handle (Mention): " + twitterMatches[i]);
-                        }
-                    }
-                    foreach (Match match in hashtagMatches)
-                    {
+                    // Sender must be the first Handle in the Body
+                    sender = twitterMatches[0].ToString();
 
-                    }
+                    // Call these functions to check the Body and save any necessary information
+                    ConvertAbbreviations();
                     AddMentions(twitterMatches);
                     AddHashtags(hashtagMatches);
+                    AddMessages();
                     break;
             }
         }
 
         public void ConvertAbbreviations()
         {
+            // The CSV doesn't have a header so we must specify this
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = false,
             };
 
+            // Use the textword CSV
             using (var reader = new StreamReader(@"textwords.csv"))
             {
+                // Open the CSV with the configs set
                 using (var csv = new CsvReader(reader, config))
                 {
                     var records = csv.GetRecords<TextWords>().ToList();
                     
+                    // Go through each TextWord
                     for(int i = 0; i < 255; i++)
                     {
+                        // If the current TextWord is found in the body
                         var abr = records[i].shortVer;
                         if (body.ToUpper().Contains(abr))
                         {
+                            // Add <> in at the start and end of the Long Version of the TextWord
                             string longVer = "<" + records[i].longVer + ">";
+                            // Combine the Short TextWord and the Long TextWord
                             string processedMessage = abr + " " + longVer;
+                            // Use StringBuilder to replace the old string with the new one
                             StringBuilder builder = new StringBuilder(body);
                             builder.Replace(abr, processedMessage);
+                            // Save this modified message as the body
                             body = builder.ToString();
                         }
                     }
@@ -265,7 +269,29 @@ namespace NapierBankMessage
 
         public void AddMessages()
         {
-            
+            // Check if the JSON file exists
+            if(File.Exists("Messages.json"))
+            {
+                Message message = new Message(header, sender, subject, body);
+                MessageList messageList = JsonConvert.DeserializeObject<MessageList>(File.ReadAllText("Messages.json"));
+                messageList.Messages.Add(message);
+
+                // Write the Message to a JSON
+                File.WriteAllText("Messages.json", JsonConvert.SerializeObject(messageList, Formatting.Indented) + Environment.NewLine);
+            }
+            // If not then make a new JSON file
+            else
+            {
+                //Create a JSON file
+                File.WriteAllText("Messages.json", "{\"Messages\": []}");
+
+                Message message = new Message(header, sender, subject, body);
+                MessageList messageList = JsonConvert.DeserializeObject<MessageList>(File.ReadAllText("Messages.json"));
+                messageList.Messages.Add(message);
+
+                // Write the Message to a JSON
+                File.WriteAllText("Messages.json", JsonConvert.SerializeObject(messageList, Formatting.Indented) + Environment.NewLine);
+            }
         }
     }
 }
