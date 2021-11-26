@@ -49,6 +49,13 @@ namespace NapierBankMessage
             this.Close();
         }
 
+        private void btnFile_Click(object sender, RoutedEventArgs e)
+        {
+            InputFileManager file = new InputFileManager();
+
+            file.ImportFile("input");
+        }
+
         private void btnSubmit_Click(object sender, RoutedEventArgs e)
         {
             header = txtHeader.Text;

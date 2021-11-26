@@ -99,6 +99,7 @@
       <DependentUpon>EndOfSession.xaml</DependentUpon>
     </Compile>
     <Compile Include="Hashtag.cs" />
+    <Compile Include="InputFileManager.cs" />
     <Compile Include="SIR.cs" />
     <Compile Include="TextWords.cs" />
     <Page Include="EndOfSession.xaml">

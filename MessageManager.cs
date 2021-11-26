@@ -89,6 +89,16 @@ namespace NapierBankMessage
                     sender = emailMatch.Value;
                     subject = subjectMatch.Value;
 
+                    // Censor URLs with <Blocked Link>
+                    for(int i = 0; i < urlMatches.Count; i++)
+                    {
+                        // Use StringBuilder to replace the old string with the new one
+                        StringBuilder builder = new StringBuilder(body);
+                        builder.Replace(urlMatches[i].Value, "<Quarantined URL>");
+                        // Save this modified message as the body
+                        body = builder.ToString();
+                    }
+
                     // Checks if the EMail is a SIR email or SEM
                     // If the Body contains a sort code, assume its a SIR
                     if (body.Contains("Sort Code"))
