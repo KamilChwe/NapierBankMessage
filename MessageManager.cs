@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -275,13 +274,14 @@ namespace NapierBankMessage
 
         public void AddURLs(MatchCollection urls)
         {
-            //
+            // Check if the file exists
             if(File.Exists("BlockedURLs.json"))
             {
                 URLList blockedURLs = JsonConvert.DeserializeObject<URLList>(File.ReadAllText("BlockedURLs.json"));
 
                 foreach(var url in urls)
                 {
+                    // Create and populate List
                     BlockedURL newUrl = new BlockedURL(url.ToString());
                     blockedURLs.URLs.Add(newUrl);
 

@@ -5,8 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NapierBankMessage"
         mc:Ignorable="d"
-        Title="EndOfSession" Height="450" Width="800">
+        Title="EndOfSession" Height="300" Width="500">
     <Grid>
-        
+        <Label Content="Trending List:" HorizontalAlignment="Left" Margin="30,10,0,0" VerticalAlignment="Top"/>
+        <Label Content="Mentions:" HorizontalAlignment="Left" Margin="192,10,0,0" VerticalAlignment="Top"/>
+        <Label Content="SIR List:" HorizontalAlignment="Left" Margin="369,10,0,0" VerticalAlignment="Top"/>
+        <ListBox x:Name="lstTrending" HorizontalAlignment="Left" Height="200" Margin="10,41,0,0" VerticalAlignment="Top" Width="130"/>
+        <ListBox x:Name="lstMentions" HorizontalAlignment="Left" Height="200" Margin="160,41,0,0" VerticalAlignment="Top" Width="130"/>
+        <ListBox x:Name="lstSir" HorizontalAlignment="Left" Height="200" Margin="330,41,0,0" VerticalAlignment="Top" Width="130"/>
+
     </Grid>
 </Window>

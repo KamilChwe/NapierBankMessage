@@ -41,6 +41,14 @@ namespace NapierBankMessage
             txtMessageType.Content = messageType + " Message ID Detected!";
         }
 
+        private void btnEnd_Click(object sender, RoutedEventArgs e)
+        {
+            EndOfSession newScreen = new EndOfSession();
+
+            newScreen.Show();
+            this.Close();
+        }
+
         private void btnSubmit_Click(object sender, RoutedEventArgs e)
         {
             header = txtHeader.Text;
