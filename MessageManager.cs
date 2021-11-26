@@ -21,7 +21,7 @@ namespace NapierBankMessage
         string subject;
         string body;
         string messageType;
-        bool SIR;
+        string natureOfIncident;
 
         // Basically acts like a "Master" functions, gets all the variables in place
         public void StartProcessing(string messageTypeIn, string headerIn, string bodyIn)
@@ -36,6 +36,11 @@ namespace NapierBankMessage
 
         public void FindDetails()
         {
+            // setup the Nature of Incident array
+            string[] natureOfIncidentList = { "Theft", "Staff Attack", "ATM Theft", "Raid", "Customer Attack", "Staff Abuse", "Bomb Threat", "Terrorism", "Suspicious Incident", "Intelligence", "Cash Loss" };
+
+            // RegEx really came in handy since I could easily hack my way through each string extracing anything I needed.
+            // Thus I have not only learned this script but also heavily used it...
             #region RegEx
             // Using RegEx to find the details in the body
 
@@ -49,6 +54,10 @@ namespace NapierBankMessage
             Regex emailRegex = new Regex(@"([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)");
             // Regex for finding Links (Example: www.youtube.com)
             Regex urlRegex = new Regex(@"www\.([\w]+)\.([\w]{2,3})");
+            // Regex for finding the Sort Code
+            Regex SortCodeRegex = new Regex(@"([\d]{2})\-([\d]{2})\-([\d]{2})");
+            Regex subjectRegex = new Regex(@"Subject: ([\w]{1,20})");
+
 
             // Getting the matches for Regex
             Match smsMatch = smsRegex.Match(body);
@@ -59,8 +68,9 @@ namespace NapierBankMessage
             MatchCollection hashtagMatches = hashtagRegex.Matches(body);
 
             Match emailMatch = emailRegex.Match(body);
-
             MatchCollection urlMatches = urlRegex.Matches(body);
+            Match SortCodeMatch = SortCodeRegex.Match(body);
+            Match subjectMatch = subjectRegex.Match(body);
             #endregion
 
             // Preparing the Header, Sender, Subject, and Body
@@ -71,34 +81,35 @@ namespace NapierBankMessage
                     sender = smsMatch.Value;
 
                     // Call these functions to check the Body and save any necessary information
-                    ConvertAbbreviations();
+                    ConvertAbbreviations(body);
                     AddMessages();
                     break;
 
                 case "EMail":
                     // Sender is the only email in the body
                     sender = emailMatch.Value;
+                    subject = subjectMatch.Value;
 
                     // Checks if the EMail is a SIR email or SEM
                     // If the Body contains a sort code, assume its a SIR
                     if (body.Contains("Sort Code"))
                     {
-                        SIR = true;
-                        MessageBox.Show("This is a SIR email");
+                        foreach (string incident in natureOfIncidentList)
+                        {
+                            if(body.Contains(incident))
+                            {
+                                natureOfIncident = incident;
+                            }
+                        }
+                        AddSIR(SortCodeMatch.Value, natureOfIncident);
                     }
                     // Otherwise, assume its SEM
                     else
                     {
-                        SIR = false;
                         MessageBox.Show("This is a SEM email");
                     }
-                    MessageBox.Show("Found an email address: " + emailMatch.Value);
-                    foreach (Match match in urlMatches)
-                    {
-                        MessageBox.Show("Found an URL: " + match.Value);
-                        //AddURLs(match.Value);
-                    }
-
+                    AddMessages();
+                    AddURLs(urlMatches);
                     break;
 
                 case "Tweet":
@@ -106,7 +117,7 @@ namespace NapierBankMessage
                     sender = twitterMatches[0].ToString();
 
                     // Call these functions to check the Body and save any necessary information
-                    ConvertAbbreviations();
+                    ConvertAbbreviations(body);
                     AddMentions(twitterMatches);
                     AddHashtags(hashtagMatches);
                     AddMessages();
@@ -114,7 +125,7 @@ namespace NapierBankMessage
             }
         }
 
-        public void ConvertAbbreviations()
+        public void ConvertAbbreviations(string body)
         {
             // The CSV doesn't have a header so we must specify this
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -262,9 +273,68 @@ namespace NapierBankMessage
             }
         }
 
-        public void AddURLs()
+        public void AddURLs(MatchCollection urls)
         {
+            //
+            if(File.Exists("BlockedURLs.json"))
+            {
+                URLList blockedURLs = JsonConvert.DeserializeObject<URLList>(File.ReadAllText("BlockedURLs.json"));
 
+                foreach(var url in urls)
+                {
+                    BlockedURL newUrl = new BlockedURL(url.ToString());
+                    blockedURLs.URLs.Add(newUrl);
+
+                    // Write the url to the JSON
+                    File.WriteAllText("BlockedURLs.json", JsonConvert.SerializeObject(blockedURLs, Formatting.Indented) + Environment.NewLine);
+                }
+            }
+            else
+            {
+                // Create a new JSON file
+                File.WriteAllText("BlockedURLs.json", "{\"URLs\": []}");
+                
+                URLList blockedURLs = JsonConvert.DeserializeObject<URLList>(File.ReadAllText("BlockedURLs.json"));
+
+                foreach (var url in urls)
+                {
+                    // Create and populate the URL list
+                    BlockedURL newUrl = new BlockedURL(url.ToString());
+                    blockedURLs.URLs.Add(newUrl);
+
+                    // Write the url to the JSON
+                    File.WriteAllText("BlockedURLs.json", JsonConvert.SerializeObject(blockedURLs, Formatting.Indented) + Environment.NewLine);
+                }
+            }
+        }
+
+        public void AddSIR(string sortCode, string natureOfIncident)
+        {
+            SIR sir = new SIR(sortCode, natureOfIncident);
+
+            // Check if the JSON file exists
+            if (File.Exists("SIR.json"))
+            {
+                // Create and populate the SIR list
+                var SIRList = JsonConvert.DeserializeObject<SIRList>(File.ReadAllText("SIR.json"));
+                SIRList.SIR.Add(sir);
+
+                // Write the SIR to a JSON
+                File.WriteAllText("SIR.json", JsonConvert.SerializeObject(SIRList, Formatting.Indented) + Environment.NewLine);
+            }
+            // If not then make a new JSON file
+            else
+            {
+                // Create the JSON file
+                File.WriteAllText("SIR.json", "{\"SIR\": []}");
+
+                // Create and populate the SIR list
+                var SIRList = JsonConvert.DeserializeObject<SIRList>(File.ReadAllText("SIR.json"));
+                SIRList.SIR.Add(sir);
+
+                // Write the SIR to a JSON
+                File.WriteAllText("SIR.json", JsonConvert.SerializeObject(SIRList, Formatting.Indented) + Environment.NewLine);
+            }
         }
 
         public void AddMessages()
@@ -272,6 +342,7 @@ namespace NapierBankMessage
             // Check if the JSON file exists
             if(File.Exists("Messages.json"))
             {
+                // Create and populate the message list
                 Message message = new Message(header, sender, subject, body);
                 MessageList messageList = JsonConvert.DeserializeObject<MessageList>(File.ReadAllText("Messages.json"));
                 messageList.Messages.Add(message);
@@ -285,6 +356,7 @@ namespace NapierBankMessage
                 //Create a JSON file
                 File.WriteAllText("Messages.json", "{\"Messages\": []}");
 
+                // Create and populate the message list
                 Message message = new Message(header, sender, subject, body);
                 MessageList messageList = JsonConvert.DeserializeObject<MessageList>(File.ReadAllText("Messages.json"));
                 messageList.Messages.Add(message);
